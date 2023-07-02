@@ -1,0 +1,11 @@
+# To re-generate this file, run:
+#   nix run github:nix-community/dream2nix#detect-projects $source
+# ... where `$source` points to the source of your project.
+
+[rust-nixos]
+name = "rust-nixos"
+relPath = ""
+subsystem = "rust"
+translator = "cargo-lock"
+translators = [ "cargo-lock", "cargo-toml",]
+builder = "crane"
