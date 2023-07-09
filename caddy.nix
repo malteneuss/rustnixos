@@ -22,7 +22,7 @@
                     #           respond "Hello, world34!"
                      reverse_proxy http://127.0.0.1:${toString config.services.rustnixos.port}
                   '';
-                  "95.216.212.248".extraConfig = ''
+                  "workler.de".extraConfig = ''
                      reverse_proxy http://127.0.0.1:${toString config.services.rustnixos.port}
                   '';
                 };

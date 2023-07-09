@@ -91,6 +91,9 @@ in {
         serviceConfig = {
           User = cfg.user;
           Type = "oneshot";
+          # oneshot has implictly RemainAfterExit=no
+          # which runs this service on every reboot.
+          # which is what we want.
           ExecStart =
             "${pkgs.dbmate}/bin/dbmate -d ${migrations} --no-dump-schema up";
         };
