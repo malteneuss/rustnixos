@@ -1,8 +1,4 @@
-// fn main() {
-//     loop {
-//         println!("Hello, world!");
-//     }
-// }
+use sqlx::postgres::PgPoolOptions;
 use axum::{
     routing::{get, post},
     http::StatusCode,
@@ -15,6 +11,23 @@ use std::net::SocketAddr;
 async fn main() {
     // initialize tracing
     tracing_subscriber::fmt::init();
+    println!("Loading");
+    let pool = PgPoolOptions::new()
+      .max_connections(5)
+      .connect("postgres:///rustnixos").await.unwrap();
+      // .connect("postgres://rustnixos@localhost:5432/rustnixos?sslmode=disable").await.unwrap();
+
+    println!("querying");
+    // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)
+    let row: (i32,) = sqlx::query_as("SELECT * FROM Values")
+      // .bind(150_i64)
+      .fetch_one(&pool).await.unwrap();
+    println!("ready {}", row.0);
+
+    tracing::info!("loaded {}", row.0);
+
+
+    // Ok(());
 
     // build our application with a route
     let app = Router::new()

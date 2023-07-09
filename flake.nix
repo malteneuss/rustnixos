@@ -5,11 +5,15 @@
     dream2nix.url = "github:nix-community/dream2nix";
     dream2nix.inputs.nixpkgs.follows = "nixpkgs";
     # separate flake
+    # Setup vm disks
     disko.url = github:nix-community/disko;
     disko.inputs.nixpkgs.follows = "nixpkgs";
+    # Manage secrets
+    sops-nix.url = "github:Mic92/sops-nix";
+    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, nixpkgs, dream2nix, disko }@attrs:
+  outputs = { self, nixpkgs, dream2nix, disko, sops-nix}@attrs:
     let
       pkgs = nixpkgs.legacyPackages."x86_64-linux";
       lib = nixpkgs.lib // builtins;
@@ -36,6 +40,7 @@
         specialArgs = attrs // { inherit migrations; };
         modules = [
           self.nixosModules.default
+          sops-nix.nixosModules.sops
           self.nixosModules.caddy
           ({ pkgs, config, ... }: {
             # Only allow this to boot as a container
@@ -57,6 +62,7 @@
                   (modulesPath + "/installer/scan/not-detected.nix")
                   (modulesPath + "/profiles/qemu-guest.nix")
                   disko.nixosModules.disko
+                  sops-nix.nixosModules.sops
                   self.nixosModules.default
                   self.nixosModules.caddy
                 ];

@@ -1,7 +1,7 @@
 -- migrate:up
-CREATE TABLE IF NOT EXISTS value
-  ( intval integer NOT NULL
+CREATE TABLE IF NOT EXISTS Values
+  ( intvalue integer NOT NULL
   );
 
 -- migrate:down
-DROP TABLE IF EXISTS value;
+DROP TABLE IF EXISTS Values;
