@@ -47,11 +47,9 @@ in {
   };
 
   config = mkIf cfg.enable {
-    system.stateVersion = "23.11";
-
     users.users.${cfg.user} = {
       name = cfg.user;
-      group = "myapp";
+      group = "rustnixos";
       description = "My app service user";
       isSystemUser = true;
     };
