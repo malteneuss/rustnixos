@@ -80,7 +80,13 @@ in {
           #local ${cfg.database} postgres peer map=${cfg.user}_map
           #local ${cfg.database} ${cfg.user} peer
         authentication = pkgs.lib.mkOverride 10 ''
-          local all all peer map=${cfg.database}_map
+          #local sameuser all peer map=superuser_map
+          local postgres postgres peer map=superuser_map
+          #local rustnixos rustnixos peer map=superuser_map
+          local ${cfg.database} ${cfg.user} peer
+          #local rustnixos postgres peer map=superuser_map
+          #local all postgres peer map=${cfg.database}_map
+          #local ${cfg.database} ${cfg.user} peer map=superuser_map
           host all all ::1/32 trust
         '';
 
@@ -93,9 +99,9 @@ in {
         # DB will then check with this identMap if our Linux
         # user is allowed to login as such DB user.
         identMap = ''
-          # ArbitraryMapName  LinuxUser DBUser
-          ${cfg.database}_map root      postgres
-          ${cfg.database}_map postgres  postgres
+          # ArbitraryMapName LinuxUser DBUser
+          superuser_map      root      postgres
+          superuser_map      postgres  postgres
         '';
       };
     };
