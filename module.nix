@@ -47,6 +47,10 @@ in {
   };
 
   config = mkIf cfg.enable {
+
+    # create a Linux user that will run our migrations
+    # and migrations, and that gets access to our (and only)
+    # our apps database.
     users.users.${cfg.user} = {
       name = cfg.user;
       group = "rustnixos";
@@ -56,21 +60,42 @@ in {
 
     services = {
       postgresql = {
-
         enable = true;
-        # only localhost and unix sockets
+        # only local unix sockets
         enableTCPIP = false;
         ensureDatabases = [ cfg.database ];
-        ensureUsers = [{
-          name = cfg.user;
-          ensurePermissions = {
-            "DATABASE ${cfg.database}" = "ALL PRIVILEGES";
-          };
+        # create a DB user/role (not a Linux user!)
+        ensureUsers = [
+          {
+            name = cfg.user;
+            ensurePermissions = {
+              "DATABASE ${cfg.database}" = "ALL PRIVILEGES";
+            };
         }];
 
+          #local all postgres peer map=eroot
+          # map=eroot
+          # local sameuser all peer
+          # host all all ::1/32 trust
+          #local ${cfg.database} postgres peer map=${cfg.user}_map
+          #local ${cfg.database} ${cfg.user} peer
         authentication = pkgs.lib.mkOverride 10 ''
-          local sameuser all peer
-          host sameuser all ::1/32 trust
+          local all all peer map=${cfg.database}_map
+          host all all ::1/32 trust
+        '';
+
+        # map Linux user to DB user
+        # we want to login as root Linux user into
+        # postgres user, which is superuser/admin.
+        # Quirk: We have to say as what DB user we
+        # want to login when we are ssh-logged-in as "root" (Linux user)
+        # "psql -U postgres" (choose standard DB superuser/admin "postgres")
+        # DB will then check with this identMap if our Linux
+        # user is allowed to login as such DB user.
+        identMap = ''
+          # MapName           LinuxUser DBUser
+          ${cfg.database}_map root      postgres
+          ${cfg.database}_map postgres  postgres
         '';
       };
     };
@@ -84,8 +109,8 @@ in {
         requires = [ "postgresql.service" ];
 
         environment = {
-          DATABASE_URL =
-            "postgres://${cfg.user}@localhost:5432/${cfg.database}?sslmode=disable";
+#          DATABASE_URL = "postgres://${cfg.user}@/${cfg.user}";
+          DATABASE_URL = "postgres://${cfg.user}@localhost:5432/${cfg.database}?sslmode=disable";
         };
 
         serviceConfig = {
