@@ -80,14 +80,14 @@ in {
           #local ${cfg.database} postgres peer map=${cfg.user}_map
           #local ${cfg.database} ${cfg.user} peer
         authentication = pkgs.lib.mkOverride 10 ''
-          #local sameuser all peer map=superuser_map
-          local postgres postgres peer map=superuser_map
+          local sameuser all peer map=superuser_map
+          #local postgres postgres peer map=superuser_map
           #local rustnixos rustnixos peer map=superuser_map
-          local ${cfg.database} ${cfg.user} peer
+          #local ${cfg.database} ${cfg.user} peer
           #local rustnixos postgres peer map=superuser_map
           #local all postgres peer map=${cfg.database}_map
           #local ${cfg.database} ${cfg.user} peer map=superuser_map
-          host all all ::1/32 trust
+          #host all all ::1/32 trust
         '';
 
         # map Linux user to DB user
@@ -102,6 +102,8 @@ in {
           # ArbitraryMapName LinuxUser DBUser
           superuser_map      root      postgres
           superuser_map      postgres  postgres
+          # Let other names login as themselves
+          superuser_map      /^(.*)$   \1
         '';
       };
     };
@@ -115,8 +117,8 @@ in {
         requires = [ "postgresql.service" ];
 
         environment = {
-#          DATABASE_URL = "postgres://${cfg.user}@/${cfg.user}";
-          DATABASE_URL = "postgres://${cfg.user}@localhost:5432/${cfg.database}?sslmode=disable";
+#          DATABASE_URL = "postgres://${cfg.user}/${cfg.database}?socket=/var/run/postgresql";
+          DATABASE_URL = "postgres://${cfg.user}/${cfg.database}?socket=/var/run/postgresql";
         };
 
         serviceConfig = {
@@ -126,7 +128,9 @@ in {
           # which runs this service on every reboot.
           # which is what we want.
           ExecStart =
-            "${pkgs.dbmate}/bin/dbmate -d ${migrations} --no-dump-schema up";
+          # Don' use "dbmate .. up, because it will try to create a database as DB user postgres,
+          # but we don't allow this services Linux user to connect as postgres superuser/admin for security.
+            "${pkgs.dbmate}/bin/dbmate -d ${migrations} --no-dump-schema migrate";
         };
       };
 
@@ -138,7 +142,8 @@ in {
 
         environment = {
           APP_PORT = toString cfg.port;
-          DATABASE_URL = "postgres:///${cfg.user}";
+#          DATABASE_URL = "postgres:///${cfg.user}";
+          DATABASE_URL = "postgres://${cfg.user}/${cfg.database}";
         };
 
         serviceConfig = {
