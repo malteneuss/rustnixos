@@ -66,7 +66,7 @@
                   self.nixosModules.default
                   self.nixosModules.caddy
                 ];
-                disko.devices = import ./nixos-modules.disk-config.nix {
+                disko.devices = import ./nixos-modules/disk-config.nix {
                   lib = nixpkgs.lib;
                 };
                 boot.loader.grub = {

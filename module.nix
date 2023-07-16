@@ -55,8 +55,7 @@ in {
     };
     users.groups.${cfg.databaseName} = {};
 
-    services = {
-      postgresql = {
+    services.postgresql = {
         enable = true;
         # only local unix sockets
         enableTCPIP = false;
@@ -78,6 +77,9 @@ in {
           local sameuser all peer
         '';
       };
+    # backup all databases automatically
+    services.postgresqlBackup = {
+      enable = true;
     };
 
     systemd.services = {
