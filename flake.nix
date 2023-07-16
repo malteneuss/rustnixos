@@ -32,7 +32,7 @@
         cp -r ${./db/migrations}/*.sql $out
       '';
       nixosModules.default = import ./module.nix;
-      nixosModules.caddy = import ./caddy.nix;
+      nixosModules.caddy = import ./nixos-modules/caddy.nix;
 
       # Test setup in container
       nixosConfigurations.mycontainer = nixpkgs.lib.nixosSystem {
@@ -66,7 +66,7 @@
                   self.nixosModules.default
                   self.nixosModules.caddy
                 ];
-                disko.devices = import ./disk-config.nix {
+                disko.devices = import ./nixos-modules.disk-config.nix {
                   lib = nixpkgs.lib;
                 };
                 boot.loader.grub = {
