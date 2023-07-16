@@ -9,11 +9,15 @@
     disko.url = github:nix-community/disko;
     disko.inputs.nixpkgs.follows = "nixpkgs";
     # Manage secrets
-    sops-nix.url = "github:Mic92/sops-nix";
-    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+#    sops-nix.url = "github:Mic92/sops-nix";
+#    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    agenix.url = "github:ryantm/agenix";
+    agenix.inputs.nixpkgs.follows = "nixpkgs";
+    # optionally choose not to download darwin deps (saves some resources on Linux)
+    agenix.inputs.darwin.follows = "";
   };
 
-  outputs = { self, nixpkgs, dream2nix, disko, sops-nix}@attrs:
+  outputs = { self, nixpkgs, dream2nix, disko, agenix}@attrs:
     let
       pkgs = nixpkgs.legacyPackages."x86_64-linux";
       lib = nixpkgs.lib // builtins;
@@ -40,7 +44,7 @@
         specialArgs = attrs // { inherit migrations; };
         modules = [
           self.nixosModules.default
-          sops-nix.nixosModules.sops
+#          agenix.nixosModules.default
           self.nixosModules.caddy
           ({ pkgs, config, ... }: {
             # Only allow this to boot as a container
@@ -62,13 +66,14 @@
                   (modulesPath + "/installer/scan/not-detected.nix")
                   (modulesPath + "/profiles/qemu-guest.nix")
                   disko.nixosModules.disko
-                  sops-nix.nixosModules.sops
+                  agenix.nixosModules.default
                   self.nixosModules.default
                   self.nixosModules.caddy
                 ];
                 disko.devices = import ./nixos-modules/disk-config.nix {
                   lib = nixpkgs.lib;
                 };
+                age.secrets.secret1.file = ./secrets/secret1.age;
                 boot.loader.grub = {
                   devices = [ "/dev/sda" ];
                   efiSupport = true;
