@@ -27,7 +27,6 @@ in {
       };
 
       # never change
-#      database = mkDefault "";
       database = mkOption {
               type = types.str;
               default = "rustnixos";
@@ -73,37 +72,8 @@ in {
             };
         }];
 
-          #local all postgres peer map=eroot
-          # map=eroot
-          # local sameuser all peer
-          # host all all ::1/32 trust
-          #local ${cfg.database} postgres peer map=${cfg.user}_map
-          #local ${cfg.database} ${cfg.user} peer
         authentication = pkgs.lib.mkOverride 10 ''
-          local sameuser all peer map=superuser_map
-          #local postgres postgres peer map=superuser_map
-          #local rustnixos rustnixos peer map=superuser_map
-          #local ${cfg.database} ${cfg.user} peer
-          #local rustnixos postgres peer map=superuser_map
-          #local all postgres peer map=${cfg.database}_map
-          #local ${cfg.database} ${cfg.user} peer map=superuser_map
-          #host all all ::1/32 trust
-        '';
-
-        # map Linux user to DB user
-        # we want to login as root Linux user into
-        # postgres user, which is superuser/admin.
-        # Quirk: We have to say as what DB user we
-        # want to login when we are ssh-logged-in as "root" (Linux user)
-        # "psql -U postgres" (choose standard DB superuser/admin "postgres")
-        # DB will then check with this identMap if our Linux
-        # user is allowed to login as such DB user.
-        identMap = ''
-          # ArbitraryMapName LinuxUser DBUser
-          superuser_map      root      postgres
-          superuser_map      postgres  postgres
-          # Let other names login as themselves
-          superuser_map      /^(.*)$   \1
+          local sameuser all peer
         '';
       };
     };
@@ -117,7 +87,6 @@ in {
         requires = [ "postgresql.service" ];
 
         environment = {
-#          DATABASE_URL = "postgres://${cfg.user}/${cfg.database}?socket=/var/run/postgresql";
           DATABASE_URL = "postgres://${cfg.user}/${cfg.database}?socket=/var/run/postgresql";
         };
 
@@ -142,8 +111,7 @@ in {
 
         environment = {
           APP_PORT = toString cfg.port;
-#          DATABASE_URL = "postgres:///${cfg.user}";
-          DATABASE_URL = "postgres://${cfg.user}/${cfg.database}";
+          DATABASE_URL = "postgres:///${cfg.user}";
         };
 
         serviceConfig = {
