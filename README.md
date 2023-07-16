@@ -1,3 +1,4 @@
+# (Rust) Web app on NixOS for self-hosting.
 Package and deploy a (Rust) web app that needs a database
 with Nix(OS).
 
@@ -10,6 +11,11 @@ with Nix(OS).
   - Run `nix run github:numtide/nixos-anywhere -- --flake .#hetzner-cloud root@<vm-ip>` to infect and replace
     the VM operating system with NixOS (careful: deletes everything on server!).
   - It formats the VM disks automatically using the Nix library [disko](https://github.com/nix-community/disko)
-  - The configured database [Postgresql](https://nixos.wiki/wiki/PostgreSQL).
+  - NixOS runs all apps (web app, database, migration app, reverse-proxy) as declarative systemd services, easy
+    and concise to setup.
+  - The configured database is [Postgresql](https://nixos.wiki/wiki/PostgreSQL).
+    - NixOS makes really easy to setup without overhead and unrealibility of Docker containers.
+    - Migrations are managed by [dbmate](https://github.com/amacneil/dbmate).
+    - Systemd allows us to run migrations on every web app upgrade.
   - The configured reverse-proxy that secures the web app behind a smaller attack surface and
     enables automatic, browser-trusted web encryption is [Caddy](https://nixos.wiki/wiki/Caddy).
