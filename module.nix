@@ -57,6 +57,9 @@ in {
         enable = true;
         # only local unix sockets
         enableTCPIP = false;
+        # v15 doesn't work yet in NixOS. See https://github.com/NixOS/nixpkgs/issues/216989.
+#        package = pkgs.postgresql_15;
+        package = pkgs.postgresql_14;
         ensureDatabases = [ cfg.databaseName ];
         # create a DB user/role (not a Linux user!) of the same name
         ensureUsers = [
@@ -64,6 +67,7 @@ in {
             name = cfg.databaseName;
             ensurePermissions = {
               "DATABASE ${cfg.databaseName}" = "ALL PRIVILEGES";
+#              "SCHEMA public" = "ALL PRIVILEGES,CREATE";
             };
         }];
 
