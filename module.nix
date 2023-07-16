@@ -13,10 +13,11 @@ in {
     services.rustnixos = {
       enable = mkEnableOption "Rust Webservice on NixOS";
 
-      user = mkOption {
-        type = types.str;
-        default = "rustnixos";
-        description = "User account under which app runs.";
+      # never change once deployed
+      databaseName = mkOption {
+              type = types.str;
+              default = "rustnixos";
+              description = "database name, also a db user and Linux user";
       };
 
       host = mkOption rec {
@@ -24,13 +25,6 @@ in {
         default = "127.0.0.1";
         example = default;
         description = "The host/domain name";
-      };
-
-      # never change
-      database = mkOption {
-              type = types.str;
-              default = "rustnixos";
-              description = "database name";
       };
 
       port = mkOption {
@@ -50,25 +44,26 @@ in {
     # create a Linux user that will run our migrations
     # and migrations, and that gets access to our (and only)
     # our apps database.
-    users.users.${cfg.user} = {
-      name = cfg.user;
+    users.users.${cfg.databaseName} = {
+      name = cfg.databaseName;
       group = "rustnixos";
       description = "My app service user";
       isSystemUser = true;
     };
+    users.groups.${cfg.databaseName} = {};
 
     services = {
       postgresql = {
         enable = true;
         # only local unix sockets
         enableTCPIP = false;
-        ensureDatabases = [ cfg.database ];
-        # create a DB user/role (not a Linux user!)
+        ensureDatabases = [ cfg.databaseName ];
+        # create a DB user/role (not a Linux user!) of the same name
         ensureUsers = [
           {
-            name = cfg.user;
+            name = cfg.databaseName;
             ensurePermissions = {
-              "DATABASE ${cfg.database}" = "ALL PRIVILEGES";
+              "DATABASE ${cfg.databaseName}" = "ALL PRIVILEGES";
             };
         }];
 
@@ -87,11 +82,11 @@ in {
         requires = [ "postgresql.service" ];
 
         environment = {
-          DATABASE_URL = "postgres://${cfg.user}/${cfg.database}?socket=/var/run/postgresql";
+          DATABASE_URL = "postgres:///${cfg.databaseName}?socket=/var/run/postgresql";
         };
 
         serviceConfig = {
-          User = cfg.user;
+          User = cfg.databaseName;
           Type = "oneshot";
           # oneshot has implictly RemainAfterExit=no
           # which runs this service on every reboot.
@@ -111,12 +106,12 @@ in {
 
         environment = {
           APP_PORT = toString cfg.port;
-          DATABASE_URL = "postgres:///${cfg.user}";
+          DATABASE_URL = "postgres:///${cfg.databaseName}";
         };
 
         serviceConfig = {
           ExecStart = "${webapp}/bin/rust-nixos";
-          User = cfg.user;
+          User = cfg.databaseName;
           Type = "simple";
           Restart = "always";
           KillMode = "process";
