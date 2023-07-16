@@ -17,7 +17,10 @@ in {
       databaseName = mkOption {
               type = types.str;
               default = "rustnixos";
-              description = "database name, also a db user and Linux user";
+              description = ''database name, also a db user and Linux user.
+              Internal since changing this value would lead to breakage while setting up databases'';
+              internal = true;
+              readOnly = true;
       };
 
       host = mkOption rec {
