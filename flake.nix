@@ -6,18 +6,18 @@
     dream2nix.inputs.nixpkgs.follows = "nixpkgs";
     # separate flake
     # Setup vm disks
-    disko.url = github:nix-community/disko;
+    disko.url = "github:nix-community/disko";
     disko.inputs.nixpkgs.follows = "nixpkgs";
     # Manage secrets
-#    sops-nix.url = "github:Mic92/sops-nix";
-#    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
+    #    sops-nix.url = "github:Mic92/sops-nix";
+    #    sops-nix.inputs.nixpkgs.follows = "nixpkgs";
     agenix.url = "github:ryantm/agenix";
     agenix.inputs.nixpkgs.follows = "nixpkgs";
     # optionally choose not to download darwin deps (saves some resources on Linux)
     agenix.inputs.darwin.follows = "";
   };
 
-  outputs = { self, nixpkgs, dream2nix, disko, agenix}@attrs:
+  outputs = { self, nixpkgs, dream2nix, disko, agenix }@attrs:
     let
       pkgs = nixpkgs.legacyPackages."x86_64-linux";
       lib = nixpkgs.lib // builtins;
@@ -32,11 +32,16 @@
       '';
     in {
       packages."x86_64-linux".migration-data = pkgs.callPackage ./nix/migration-data.package.nix {};
+      packages."x86_64-linux".postgresql-devVM =
+              self.nixosConfigurations.postgresql-devVM.config.system.build.vm;
+
       nixosModules.rustnixos = import ./module.nix;
       nixosModules.default = import ./module.nix;
       nixosModules.caddy = import ./nix/caddy.module.nix;
+      nixosModules.postgresql-dev = import ./nixos-modules/postgresql-dev.nix;
 
-      # Test setup in container
+
+      # Run whole setup in container
       nixosConfigurations.mycontainer = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = attrs // { inherit migrations; };
@@ -50,13 +55,29 @@
           })
         ];
       };
+      # Run database setup in container
+            nixosConfigurations.postgresql-devVM = nixpkgs.lib.nixosSystem {
+              system = "x86_64-linux";
+              specialArgs = attrs // { inherit migration-data; };
+              modules = [
+                self.nixosModules.postgresql-dev
+                ({ pkgs, config, ... }: {
+                  # Only allow this to boot as a container
+                  boot.isContainer = true;
+                  # Make VM output to the terminal instead of a separate window
+                  virtualisation.vmVariant.virtualisation.graphics = false;
+                  system.stateVersion = "23.11";
+                })
+              ];
+            };
+
        #-----------------------------------------------------------
           # The following line names the configuration as hetzner-cloud
           # This name will be referenced when nixos-remote is run
           #-----------------------------------------------------------
           nixosConfigurations.hetzner-cloud = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = attrs // { inherit migrations; };
+            specialArgs = attrs // { inherit migration-data; };
             modules = [
               ({modulesPath, ... }: {
                 imports = [
