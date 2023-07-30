@@ -43,5 +43,9 @@ with Nix(OS).
 # Test
 
 ```bash
-curl --connect-to localhost:80:mycontainer:80 --connect-to localhost:443:mycontainer:443 http://localhost -k -L
+sudo nixos-container create db-dev --flake .#db-dev
+sudo nixos-container start db-dev --flake .#db-dev
+curl --connect-to localhost:80:all:80 --connect-to localhost:443:all:443 http://localhost -k -L
+sudo nixos-container update db-dev --flake .#db-dev
+sudo nixos-container root-login db-dev --flake .#db-dev
 ```

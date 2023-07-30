@@ -1,5 +1,4 @@
-{ disks ? [ "/dev/sda" ], ... }:
-{
+{ disks ? [ "/dev/sda" ], ... }: {
   disk = {
     main = {
       type = "disk";

@@ -14,8 +14,9 @@ async fn main() {
     println!("Loading");
     let pool = PgPoolOptions::new()
       .max_connections(5)
-      .connect("postgres:///rustnixos").await.unwrap();
-      // .connect("postgres://rustnixos@localhost:5432/rustnixos?sslmode=disable").await.unwrap();
+      // .connect("postgres:///rustnixos").await.unwrap();
+      // .connect("postgres://rustnixos:@localhost:5432/rustnixos?sslmode=disable").await.unwrap();
+    .connect("postgres://rustnixos:@db-dev:5432/rustnixos?sslmode=disable").await.unwrap();
 
     println!("querying");
     // Make a simple query to return the given parameter (use a question mark `?` instead of `$1` for MySQL)

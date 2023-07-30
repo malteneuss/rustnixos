@@ -1,9 +1,8 @@
-{ self, nixpkgs, migrations, config, lib, ... }:
+{ self, nixpkgs, migration-data, system, config, lib, ... }:
 
 with lib;
 
 let
-  system = "x86_64-linux";
   cfg = config.services.rustnixos;
   pkgs = nixpkgs.legacyPackages.${system};
 in {
@@ -28,16 +27,18 @@ in {
         enableTCPIP = true;
         ensureDatabases = [ cfg.databaseName ];
 #        # create a DB user/role (not a Linux user!) of the same name
-#        ensureUsers = [
-#          {
-#            name = cfg.databaseName;
-#            ensurePermissions = {
-#              "DATABASE ${cfg.databaseName}" = "ALL PRIVILEGES";
-##              "SCHEMA public" = "ALL PRIVILEGES,CREATE";
-#            };
-#        }];
+        ensureUsers = [
+          {
+            name = cfg.databaseName;
+            ensurePermissions = {
+              "DATABASE ${cfg.databaseName}" = "ALL PRIVILEGES";
+#              "SCHEMA public" = "ALL PRIVILEGES,CREATE";
+            };
+        }];
 
         authentication = pkgs.lib.mkOverride 10 ''
+          # allow all traffic to db
+          host all all 0.0.0.0/0 trust
           local all all trust
         '';
       };
@@ -51,7 +52,8 @@ in {
         requires = [ "postgresql.service" ];
 
         environment = {
-          DATABASE_URL = "postgres:///${cfg.databaseName}?socket=/var/run/postgresql";
+#          DATABASE_URL = "postgres:///${cfg.databaseName}?socket=/var/run/postgresql";
+          DATABASE_URL = "postgres://rustnixos@localhost:5432/${cfg.databaseName}?socket=/var/run/postgresql";
         };
 
         serviceConfig = {
@@ -62,7 +64,7 @@ in {
           ExecStart =
           # Don' use "dbmate .. up, because it will try to create a database as DB user postgres,
           # but we don't allow this services Linux user to connect as postgres superuser/admin for security.
-            "${pkgs.dbmate}/bin/dbmate -d ${migrations} --no-dump-schema migrate";
+            "${pkgs.dbmate}/bin/dbmate -d ${migration-data} --no-dump-schema migrate";
         };
       };
     };
