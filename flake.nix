@@ -26,11 +26,8 @@
       forAllSystems = f:
         lib.genAttrs systems
         (system: f system (nixpkgs.legacyPackages.${system}));
-      migrations = pkgs.runCommand "mkMigrations" { } ''
-        mkdir $out
-        cp -r ${./db/migrations}/*.sql $out
-      '';
     in {
+      packages."x86_64-linux".rustnixos = pkgs.callPackage ./nix/rustnixos.package.nix {};
       packages."x86_64-linux".migration-data = pkgs.callPackage ./nix/migration-data.package.nix {};
       packages."x86_64-linux".postgresql-devVM =
               self.nixosConfigurations.postgresql-devVM.config.system.build.vm;
@@ -44,7 +41,7 @@
       # Run whole setup in container
       nixosConfigurations.mycontainer = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
-        specialArgs = attrs // { inherit migrations; };
+        specialArgs = attrs // { migration-data=self.packages."x86_64-linux".migration-data; };
         modules = [
           self.nixosModules.default
           self.nixosModules.caddy
@@ -58,7 +55,8 @@
       # Run database setup in container
             nixosConfigurations.postgresql-devVM = nixpkgs.lib.nixosSystem {
               system = "x86_64-linux";
-              specialArgs = attrs // { inherit migration-data; };
+              specialArgs = attrs // { migration-data=self.packages."x86_64-linux".migration-data; };
+
               modules = [
                 self.nixosModules.postgresql-dev
                 ({ pkgs, config, ... }: {
@@ -77,7 +75,7 @@
           #-----------------------------------------------------------
           nixosConfigurations.hetzner-cloud = nixpkgs.lib.nixosSystem {
             system = "x86_64-linux";
-            specialArgs = attrs // { inherit migration-data; };
+            specialArgs = attrs // { migration-data=self.packages."x86_64-linux".migration-data; };
             modules = [
               ({modulesPath, ... }: {
                 imports = [
@@ -107,14 +105,15 @@
               })
             ];
           };
-    } // dream2nix.lib.makeFlakeOutputs {
-      inherit systems;
-      config.projectRoot = ./.;
-      source =
-        lib.sourceFilesBySuffices ./. [ ".rs" "Cargo.toml" "Cargo.lock" ];
-      projects."rust-nixos" = {
-        name = "2rust-nixos";
-        translator = "cargo-lock";
-      };
     };
+#     // dream2nix.lib.makeFlakeOutputs {
+#      inherit systems;
+#      config.projectRoot = ./.;
+#      source =
+#        lib.sourceFilesBySuffices ./. [ ".rs" "Cargo.toml" "Cargo.lock" ];
+#      projects."rust-nixos" = {
+#        name = "2rust-nixos";
+#        translator = "cargo-lock";
+#      };
+#    };
 }
