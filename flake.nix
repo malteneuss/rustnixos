@@ -23,14 +23,15 @@
       lib = nixpkgs.lib // builtins;
 
       systems = [ "x86_64-linux" ];
+      system = "x86_64-linux";
       forAllSystems = f:
         lib.genAttrs systems
         (system: f system (nixpkgs.legacyPackages.${system}));
     in {
       packages."x86_64-linux".rustnixos = pkgs.callPackage ./nix/rustnixos.package.nix {};
       packages."x86_64-linux".migration-data = pkgs.callPackage ./nix/migration-data.package.nix {};
-      packages."x86_64-linux".postgresql-devVM =
-              self.nixosConfigurations.postgresql-devVM.config.system.build.vm;
+#      packages."x86_64-linux".postgresql-devVM =
+#              self.nixosConfigurations.postgresql-devVM.config.system.build.vm;
 
       nixosModules.rustnixos = import ./module.nix;
       nixosModules.default = import ./module.nix;
@@ -40,8 +41,8 @@
 
       # Run whole setup in container
       nixosConfigurations.mycontainer = nixpkgs.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = attrs // { migration-data=self.packages."x86_64-linux".migration-data; };
+        inherit system;
+        specialArgs = attrs // { inherit (self.packages.${system}) migration-data; inherit system;};
         modules = [
           self.nixosModules.default
           self.nixosModules.caddy
@@ -54,8 +55,8 @@
       };
       # Run database setup in container
             nixosConfigurations.postgresql-devVM = nixpkgs.lib.nixosSystem {
-              system = "x86_64-linux";
-              specialArgs = attrs // { migration-data=self.packages."x86_64-linux".migration-data; };
+              inherit system;
+              specialArgs = attrs // { inherit (self.packages.${system}) migration-data; inherit system;};
 
               modules = [
                 self.nixosModules.postgresql-dev
@@ -74,8 +75,8 @@
           # This name will be referenced when nixos-remote is run
           #-----------------------------------------------------------
           nixosConfigurations.hetzner-cloud = nixpkgs.lib.nixosSystem {
-            system = "x86_64-linux";
-            specialArgs = attrs // { migration-data=self.packages."x86_64-linux".migration-data; };
+            inherit system;
+            specialArgs = attrs // { inherit (self.packages.${system}) migration-data; inherit system;};
             modules = [
               ({modulesPath, ... }: {
                 imports = [

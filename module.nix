@@ -1,9 +1,8 @@
-{ self, nixpkgs, migration-data, config, lib, ... }:
+{ self, nixpkgs, migration-data, system, config, lib, ... }:
 
 with lib;
 
 let
-  system = "x86_64-linux";
   webapp = self.packages.${system}.default;
   cfg = config.services.rustnixos;
   pkgs = nixpkgs.legacyPackages.${system};
