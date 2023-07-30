@@ -1,4 +1,4 @@
-{ self, nixpkgs, migrations, config, lib, ... }:
+{ self, nixpkgs, migration-data, config, lib, ... }:
 
 with lib;
 
@@ -103,7 +103,7 @@ in {
           ExecStart =
           # Don' use "dbmate .. up, because it will try to create a database as DB user postgres,
           # but we don't allow this services Linux user to connect as postgres superuser/admin for security.
-            "${pkgs.dbmate}/bin/dbmate -d ${migrations} --no-dump-schema migrate";
+            "${pkgs.dbmate}/bin/dbmate -d ${migration-data} --no-dump-schema migrate";
         };
       };
 

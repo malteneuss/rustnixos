@@ -31,12 +31,10 @@
         cp -r ${./db/migrations}/*.sql $out
       '';
     in {
-      packages."x86_64-linux".migrations = pkgs.runCommand "mkMigrations" { } ''
-        mkdir $out
-        cp -r ${./db/migrations}/*.sql $out
-      '';
+      packages."x86_64-linux".migration-data = pkgs.callPackage ./nix/migration-data.package.nix {};
+      nixosModules.rustnixos = import ./module.nix;
       nixosModules.default = import ./module.nix;
-      nixosModules.caddy = import ./nixos-modules/caddy.nix;
+      nixosModules.caddy = import ./nix/caddy.module.nix;
 
       # Test setup in container
       nixosConfigurations.mycontainer = nixpkgs.lib.nixosSystem {
@@ -44,7 +42,6 @@
         specialArgs = attrs // { inherit migrations; };
         modules = [
           self.nixosModules.default
-#          agenix.nixosModules.default
           self.nixosModules.caddy
           ({ pkgs, config, ... }: {
             # Only allow this to boot as a container
@@ -70,7 +67,7 @@
                   self.nixosModules.default
                   self.nixosModules.caddy
                 ];
-                disko.devices = import ./nixos-modules/disk-config.nix {
+                disko.devices = import ./nix/disk-config.disko.nix {
                   lib = nixpkgs.lib;
                 };
                 age.secrets.secret1.file = ./secrets/secret1.age;
