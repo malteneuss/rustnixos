@@ -3,7 +3,7 @@
 with lib;
 
 let
-  webapp = self.packages.${system}.default;
+  webapp = self.packages.${system}.rustnixos;
   cfg = config.services.rustnixos;
   pkgs = nixpkgs.legacyPackages.${system};
 in {

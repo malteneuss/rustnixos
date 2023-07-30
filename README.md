@@ -39,3 +39,9 @@ with Nix(OS).
   to create a Nix package that is exposed as a modular [Nix flake](https://nixos.wiki/wiki/Flakes)
   so that servers can download and run this app wherever.
 
+
+# Test
+
+```bash
+curl --connect-to localhost:80:mycontainer:80 --connect-to localhost:443:mycontainer:443 http://localhost -k -L
+```

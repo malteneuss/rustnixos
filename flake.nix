@@ -44,7 +44,7 @@
         inherit system;
         specialArgs = attrs // { inherit (self.packages.${system}) migration-data; inherit system;};
         modules = [
-          self.nixosModules.default
+          self.nixosModules.rustnixos
           self.nixosModules.caddy
           ({ pkgs, config, ... }: {
             # Only allow this to boot as a container
@@ -84,7 +84,7 @@
                   (modulesPath + "/profiles/qemu-guest.nix")
                   disko.nixosModules.disko
                   agenix.nixosModules.default
-                  self.nixosModules.default
+                  self.nixosModules.rustnixos
                   self.nixosModules.caddy
                 ];
                 disko.devices = import ./nix/disk-config.disko.nix {
